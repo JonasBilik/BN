@@ -1,0 +1,12 @@
+name: test
+title: test
+username: jonas-bilik-bn-statistik
+account: jonas-bilik-bn-statistik
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 11867487
+bundleId: 8542730
+url: https://jonas-bilik-bn-statistik.shinyapps.io/test/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
