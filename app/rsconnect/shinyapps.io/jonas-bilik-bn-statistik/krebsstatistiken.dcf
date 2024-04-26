@@ -5,8 +5,9 @@ account: jonas-bilik-bn-statistik
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11867461
-bundleId: 8542720
+bundleId: 8544707
 url: https://jonas-bilik-bn-statistik.shinyapps.io/krebsstatistiken/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: test/app.R

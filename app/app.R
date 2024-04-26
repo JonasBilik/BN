@@ -13,17 +13,28 @@ Sys.getlocale("LC_CTYPE")
 Sys.setlocale("LC_CTYPE", "de_DE.UTF-8") 
 
 
-# load packages
-packages <- c("tidyverse", "tidyr", "dplyr", "stringr", "shiny", "shinydashboard", "readxl", "sf", "leaflet")
+# # load packages
+# packages <- c("tidyverse", "tidyr", "dplyr", "stringr", "shiny", "shinydashboard", "readxl", "sf", "leaflet")
+# 
+# lapply(packages, function(x) {
+#   if(!require(x, character.only = TRUE)) {
+#     install.packages(x, dependencies = TRUE)
+#   }
+#   library(x, character.only = TRUE)
+# })
+# 
+# rm(packages)
 
-lapply(packages, function(x) {
-  if(!require(x, character.only = TRUE)) {
-    install.packages(x, dependencies = TRUE)
-  }
-  library(x, character.only = TRUE)
-})
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(shiny)
+library(shinydashboard)
+library(readxl)
+library(sf)
+library(leaflet)
+library(ggplot2)
 
-rm(packages)
 
 
 #----------------------------------#
@@ -35,16 +46,16 @@ rm(packages)
 #---------------------------#
 
 
-path.data <- "C:/Users/jonas/sciebo2/Persönlich/Bewerbung/Krebsregister/"
+#path.data <- "data/"
 
 # Datensatz bösartige Neubildungen pro Bundesland
-bn <- read.csv(paste0(path.data,"BN.csv"), skip = 5, header = TRUE, sep = ";", fileEncoding = "ISO-8859-1")
+bn <- read.csv("BN.csv", skip = 5, header = TRUE, sep = ";", fileEncoding = "ISO-8859-1")
 
 # Datensatz Einwohner pro Bundesland 
-einwohner <- read.csv(paste0(path.data,"Einwohner.csv"), skip = 5, header = TRUE, sep = ";", fileEncoding = "ISO-8859-1")
+einwohner <- read.csv("Einwohner.csv", skip = 5, header = TRUE, sep = ";", fileEncoding = "ISO-8859-1")
 
 # Datensatz shapefiles Bundesländer
-sf <- st_read(paste0(path.data,"Shapefiles/vg2500_bld.shp"), options = "ENCODING=ISO-8859-1")
+sf <- st_read("Shapefiles/vg2500_bld.shp", options = "ENCODING=ISO-8859-1")
 
 #sf_land$GEN <- iconv(sf_land$GEN, "ISO-8859-1", "UTF-8")
 
@@ -90,13 +101,13 @@ einwohner <- einwohner %>%
 
 data <- bn %>%
   left_join(einwohner, by = c("Jahr", "Bundesland")) %>%
-  mutate(bn_per_capita = Fälle/Einwohner) %>%
+  mutate(bn_per_capita = Fälle/Einwohner * 100) %>%
   left_join(sf) %>%
   mutate(Jahr = as.numeric(Jahr))
 
 data <- st_as_sf(data)
 
-saveRDS(data, paste0(path.data,"data.rds"))
+#saveRDS(data, "data.rds")
 
 rm(bn)
 
@@ -104,15 +115,25 @@ rm(bn)
 #--------------#
 # 2. Shiny ####
 #--------------#
-
 ui <- dashboardPage(
   
-  dashboardHeader(title = "Krankenhausstatistik: Entlassene Patienten - Bösartige Neubildungen"),
+  dashboardHeader(title = "Krankenhausstatistik"),
   
   dashboardSidebar(
     selectInput("bn", "Art der bösartigen Neubildung", choices = unique(data$BN)),
-    sliderInput("jahr", "Jahr", min = min(data$Jahr), max = max(data$Jahr), value = min(data$Jahr))
-  ), 
+    sliderInput("jahr", "Jahr", 
+                min = min(data$Jahr), 
+                max = max(data$Jahr), 
+                value = min(data$Jahr),
+                sep = ''),  # Kein Tausendertrennzeichen für die Jahreszahl
+    tags$div(
+      tags$h4("Info:", style = "margin-left: 10px;"),
+      tags$p(
+        HTML("Anteil der entlassenen Patienten mit bösartigen Neubildungen an der Gesamtbevölkerung des Bundeslandes. <br><br> Quelle: Statistisches Bundesamt"),
+        style = "padding-left: 20px; padding-right: 20px;"  
+      )
+    )
+  ),
   
   dashboardBody(
     tags$head(
@@ -126,7 +147,6 @@ ui <- dashboardPage(
     leafletOutput("bn_map", height = "95vh")
   )
 )
-
 
 
 
@@ -150,14 +170,15 @@ server <- function(input, output, session) {
         color = "#444444",
         weight = 0.5,
         smoothFactor = 0.5,
-        label = ~paste(Bundesland, format(bn_per_capita, scientific = FALSE)),
+        label = ~paste(Bundesland, format(round(bn_per_capita, 4), nsmall = 4), "%"),
         highlightOptions = highlightOptions(
           weight = 3,
           color = "#666666",
           fillOpacity = 0.7,
           bringToFront = TRUE
         )
-      ) %>%
+      ) %>% 
+     # addControl(html = "<h4>Anteil Patienten mit bösartigen Neubildungen an Gesamtbevölkerung</h4>", position = "topleft") %>%
       addControl("Deutsche Bundesländer", position = "topright")
   })
   
@@ -176,4 +197,4 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 
-rsconnect::deployApp('C:/Users/jonas/Desktop/app')
+# rsconnect::deployApp('C:/GIT/BN/app')
