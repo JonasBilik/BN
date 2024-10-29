@@ -185,7 +185,7 @@ server <- function(input, output, session) {
   observe({
     leafletProxy("bn_map", data = data1()) %>%
       setView(lng = 10.5, lat = 51.2, zoom = 6) %>%
-      setMaxBounds(lng1 = 5.5, lat1 = 47, lng2 = 15, lat2 = 55) # Begrenzen Sie die Ansicht auf Deutschland
+      setMaxBounds(lng1 = 5.5, lat1 = 47, lng2 = 15, lat2 = 55) 
   })
 }
 
